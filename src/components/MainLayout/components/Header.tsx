@@ -33,7 +33,7 @@ export default function Header() {
             underline="none"
             to="/"
           >
-            My Store. Task 2 (Serve SPA in AWS S3 and Cloudfront Services)!
+            My Store
           </Link>
         </Typography>
 
