@@ -1,6 +1,7 @@
 import React from "react";
-import Typography from "@mui/material/Typography";
+import axios from "axios";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 type CSVFileImportProps = {
   url: string;
@@ -23,25 +24,34 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
   };
 
   const uploadFile = async () => {
-    console.log("uploadFile to", url);
+    if (!file) return;
 
-    // Get the presigned URL
-    // const response = await axios({
-    //   method: "GET",
-    //   url,
-    //   params: {
-    //     name: encodeURIComponent(file.name),
-    //   },
-    // });
-    // console.log("File to upload: ", file.name);
-    // console.log("Uploading to: ", response.data);
-    // const result = await fetch(response.data, {
-    //   method: "PUT",
-    //   body: file,
-    // });
-    // console.log("Result: ", result);
-    // setFile("");
+    console.log("UploadFile to: ", url);
+
+    const response = await axios({
+      method: "GET",
+      url,
+      params: {
+        name: encodeURIComponent(file.name),
+      },
+    });
+
+    console.log("File to upload: ", file.name);
+    console.log("Uploading to: ", response.data.uploadUrl);
+
+    const result = await fetch(response.data.uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/csv",
+      },
+      body: file,
+    });
+
+    console.log("Result: ", result);
+
+    setFile(undefined);
   };
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
