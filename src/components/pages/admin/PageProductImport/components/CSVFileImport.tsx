@@ -1,5 +1,5 @@
 import React from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -26,30 +26,41 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
   const uploadFile = async () => {
     if (!file) return;
 
-    console.log("UploadFile to: ", url);
+    let token = localStorage.getItem("authorization_token");
+    if (token) {
+      token = `Basic ${token}`;
+    }
 
-    const response = await axios({
-      method: "GET",
-      url,
-      params: {
-        name: encodeURIComponent(file.name),
-      },
-    });
+    try {
+      const response = await axios({
+        method: "GET",
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: token }),
+        },
+        params: {
+          name: encodeURIComponent(file.name),
+        },
+      });
 
-    console.log("File to upload: ", file.name);
-    console.log("Uploading to: ", response.data.uploadUrl);
+      await fetch(response.data.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/csv",
+        },
+        body: file,
+      });
 
-    const result = await fetch(response.data.uploadUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/csv",
-      },
-      body: file,
-    });
-
-    console.log("Result: ", result);
-
-    setFile(undefined);
+      setFile(undefined);
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        const { code, message } = err;
+        window.alert(`${code}: ${message}`);
+      } else {
+        console.error(err);
+      }
+    }
   };
 
   return (
