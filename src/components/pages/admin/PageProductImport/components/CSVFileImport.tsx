@@ -26,27 +26,25 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
   const uploadFile = async () => {
     if (!file) return;
 
-    console.log("UploadFile to: ", url);
-
-    const token = localStorage.getItem("authorization_token") || "";
-    const encodedToken = btoa(token);
-
-    const headers = token ? { Authorization: `Basic ${encodedToken}` } : {};
+    let token = localStorage.getItem("authorization_token");
+    if (token) {
+      token = `Basic ${token}`;
+    }
 
     try {
       const response = await axios({
         method: "GET",
         url,
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: token }),
+        },
         params: {
           name: encodeURIComponent(file.name),
         },
       });
 
-      console.log("File to upload: ", file.name);
-      console.log("Uploading to: ", response.data.uploadUrl);
-
-      const result = await fetch(response.data.uploadUrl, {
+      await fetch(response.data.uploadUrl, {
         method: "PUT",
         headers: {
           "Content-Type": "application/csv",
@@ -54,15 +52,13 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
         body: file,
       });
 
-      console.log("Result: ", result);
-
       setFile(undefined);
     } catch (err) {
       if (err instanceof AxiosError) {
         const { code, message } = err;
         window.alert(`${code}: ${message}`);
       } else {
-        throw err;
+        console.error(err);
       }
     }
   };
